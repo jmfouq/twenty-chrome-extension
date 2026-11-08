@@ -102,12 +102,12 @@ export const AskAiChat = ({ client, context, contextLabel, onClose }: AskAiChatP
       <div className="ask-ai-messages">
         {entries.map((entry) => (
           <div key={entry.id} className={`ask-ai-message ask-ai-message-${entry.role}`}>
-            {entry.role === 'assistant' ? <RichText text={entry.text} /> : entry.text}
+            {entry.role === 'assistant' ? <RichText text={entry.text} workspaceUrl={client.workspaceUrl} /> : entry.text}
           </div>
         ))}
         {isWaiting && (
           <div className="ask-ai-message ask-ai-message-assistant">
-            {pendingReply ? <RichText text={pendingReply} /> : <span className="muted">Réflexion en cours…</span>}
+            {pendingReply ? <RichText text={pendingReply} workspaceUrl={client.workspaceUrl} /> : <span className="muted">Réflexion en cours…</span>}
           </div>
         )}
       </div>

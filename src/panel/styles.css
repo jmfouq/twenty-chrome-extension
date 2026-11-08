@@ -688,6 +688,22 @@ button.field-value:hover {
   font-weight: 600;
 }
 
+.chat-reference {
+  display: inline;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #f1f1f1;
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+a.chat-reference:hover {
+  background: #e6e6e6;
+  text-decoration: underline;
+}
+
 .ask-ai-button {
   display: inline-flex;
   align-items: center;
