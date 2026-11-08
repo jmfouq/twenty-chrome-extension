@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { type AskAiContext } from '../api/askAi';
+import { getConversationKey, setConversationOpen, useConversation } from '../api/askAiStore';
 import { type TwentyClient } from '../api/TwentyClient';
 import { AskAiChat } from './AskAiChat';
 
@@ -10,14 +10,19 @@ type AskAiButtonProps = {
 };
 
 export const AskAiButton = ({ client, context, contextLabel }: AskAiButtonProps) => {
-  const [open, setOpen] = useState(false);
+  const conversationKey = getConversationKey(context);
+  const { open } = useConversation(conversationKey);
 
   if (open) {
-    return <AskAiChat client={client} context={context} contextLabel={contextLabel} onClose={() => setOpen(false)} />;
+    return <AskAiChat client={client} context={context} contextLabel={contextLabel} />;
   }
 
   return (
-    <button type="button" className="button-secondary ask-ai-button" onClick={() => setOpen(true)}>
+    <button
+      type="button"
+      className="button-secondary ask-ai-button"
+      onClick={() => setConversationOpen(conversationKey, true)}
+    >
       <img src="/icons/sparkles.svg" alt="" />
       Ask AI
     </button>

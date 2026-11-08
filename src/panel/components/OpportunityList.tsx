@@ -3,6 +3,7 @@ import { type TwentyClient } from '../api/TwentyClient';
 import { findOpportunities, getOpportunityStageOptions, updateOpportunity } from '../api/twentyApi';
 import { type Opportunity, type SelectOption } from '../api/types';
 import { ActivityPanel } from './ActivityPanel';
+import { isConversationOpen } from '../api/askAiStore';
 import { AskAiButton } from './AskAiButton';
 import { EditableField } from './EditableField';
 
@@ -56,7 +57,9 @@ type OpportunityRowProps = {
 };
 
 const OpportunityRow = ({ client, opportunity, stageOptions, onUpdated }: OpportunityRowProps) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(() =>
+    isConversationOpen({ objectNameSingular: 'opportunity', recordId: opportunity.id }),
+  );
 
   const saveField = (buildData: (value: string) => Record<string, unknown>) => async (value: string) =>
     onUpdated(await updateOpportunity(client, opportunity.id, buildData(value)));

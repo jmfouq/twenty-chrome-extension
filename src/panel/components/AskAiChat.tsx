@@ -1,12 +1,12 @@
 import { useState, type KeyboardEvent } from 'react';
+import { type AskAiContext, type ReplyProgress, getChatUrl } from '../api/askAi';
 import {
-  type AskAiContext,
-  createChatThread,
-  getChatUrl,
-  sendChatMessage,
-  toAskAiErrorMessage,
-  waitForReply,
-} from '../api/askAi';
+  askQuestion,
+  getConversationKey,
+  resetConversation,
+  setConversationOpen,
+  useConversation,
+} from '../api/askAiStore';
 import { type TwentyClient } from '../api/TwentyClient';
 import { RichText } from './RichText';
 
@@ -14,19 +14,20 @@ type AskAiChatProps = {
   client: TwentyClient;
   context: AskAiContext | null;
   contextLabel: string | null;
-  onClose: () => void;
 };
 
-type ChatEntry = { id: string; role: 'user' | 'assistant' | 'error'; text: string };
+const getActivityLabel = ({ toolCallCount }: ReplyProgress) =>
+  toolCallCount === 0
+    ? 'Réflexion en cours…'
+    : `Recherche dans Twenty (${toolCallCount} ${toolCallCount > 1 ? 'étapes' : 'étape'})…`;
 
-export const AskAiChat = ({ client, context, contextLabel, onClose }: AskAiChatProps) => {
-  const [threadId, setThreadId] = useState<string | null>(null);
-  const [entries, setEntries] = useState<ChatEntry[]>([]);
+export const AskAiChat = ({ client, context, contextLabel }: AskAiChatProps) => {
+  const conversationKey = getConversationKey(context);
+  const { threadId, entries, progress } = useConversation(conversationKey);
   const [draft, setDraft] = useState('');
-  const [pendingReply, setPendingReply] = useState<string | null>(null);
-  const isWaiting = pendingReply !== null;
+  const isWaiting = progress !== null;
 
-  const ask = async () => {
+  const ask = () => {
     const question = draft.trim();
 
     if (!question || isWaiting) {
@@ -34,42 +35,14 @@ export const AskAiChat = ({ client, context, contextLabel, onClose }: AskAiChatP
     }
 
     setDraft('');
-    setEntries((previous) => [...previous, { id: crypto.randomUUID(), role: 'user', text: question }]);
-    setPendingReply('');
-
-    try {
-      const currentThreadId = threadId ?? (await createChatThread(client));
-
-      setThreadId(currentThreadId);
-
-      const userMessageId = await sendChatMessage(client, { threadId: currentThreadId, text: question, context });
-      const reply = await waitForReply(client, {
-        threadId: currentThreadId,
-        userMessageId,
-        onProgress: setPendingReply,
-      });
-
-      setEntries((previous) => [...previous, { id: crypto.randomUUID(), role: 'assistant', text: reply }]);
-    } catch (error) {
-      setEntries((previous) => [
-        ...previous,
-        { id: crypto.randomUUID(), role: 'error', text: toAskAiErrorMessage(error) },
-      ]);
-    } finally {
-      setPendingReply(null);
-    }
+    void askQuestion(client, { key: conversationKey, context, question });
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      void ask();
+      ask();
     }
-  };
-
-  const startNewConversation = () => {
-    setThreadId(null);
-    setEntries([]);
   };
 
   return (
@@ -81,11 +54,11 @@ export const AskAiChat = ({ client, context, contextLabel, onClose }: AskAiChatP
         </span>
         <span className="ask-ai-actions">
           {entries.length > 0 && !isWaiting && (
-            <button type="button" className="button-ghost" onClick={startNewConversation}>
+            <button type="button" className="button-ghost" onClick={() => resetConversation(conversationKey)}>
               Nouvelle
             </button>
           )}
-          <button type="button" className="button-ghost" aria-label="Fermer" onClick={onClose}>
+          <button type="button" className="button-ghost" aria-label="Fermer" onClick={() => setConversationOpen(conversationKey, false)}>
             ×
           </button>
         </span>
@@ -107,7 +80,11 @@ export const AskAiChat = ({ client, context, contextLabel, onClose }: AskAiChatP
         ))}
         {isWaiting && (
           <div className="ask-ai-message ask-ai-message-assistant">
-            {pendingReply ? <RichText text={pendingReply} workspaceUrl={client.workspaceUrl} /> : <span className="muted">Réflexion en cours…</span>}
+            {progress.text ? (
+              <RichText text={progress.text} workspaceUrl={client.workspaceUrl} />
+            ) : (
+              <span className="muted">{getActivityLabel(progress)}</span>
+            )}
           </div>
         )}
       </div>
@@ -125,7 +102,7 @@ export const AskAiChat = ({ client, context, contextLabel, onClose }: AskAiChatP
           type="button"
           className="button-primary"
           disabled={isWaiting || !draft.trim()}
-          onClick={() => void ask()}
+          onClick={ask}
         >
           Envoyer
         </button>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AskAiChat } from './components/AskAiChat';
 import { TwentyClient } from './api/TwentyClient';
+import { GENERAL_CONVERSATION_KEY, setConversationOpen, useConversation } from './api/askAiStore';
 import { clearSession, readSession, type TwentySession } from './auth/session';
 import { ConnectScreen } from './components/ConnectScreen';
 import { LinkedinView } from './components/LinkedinView';
@@ -16,7 +17,7 @@ type SessionState =
 export const App = () => {
   const [sessionState, setSessionState] = useState<SessionState>({ status: 'loading' });
   const page = usePageSnapshot();
-  const [askAiOpen, setAskAiOpen] = useState(false);
+  const { open: askAiOpen } = useConversation(GENERAL_CONVERSATION_KEY);
 
   useEffect(() => {
     void readSession().then((session) =>
@@ -64,7 +65,7 @@ export const App = () => {
           <button
             type="button"
             className="button-secondary ask-ai-button"
-            onClick={() => setAskAiOpen((value) => !value)}
+            onClick={() => setConversationOpen(GENERAL_CONVERSATION_KEY, !askAiOpen)}
           >
             <img src="/icons/sparkles.svg" alt="" />
             Ask AI
@@ -77,7 +78,7 @@ export const App = () => {
 
       {askAiOpen && (
         <div className="padded">
-          <AskAiChat client={client} context={null} contextLabel={null} onClose={() => setAskAiOpen(false)} />
+          <AskAiChat client={client} context={null} contextLabel={null} />
         </div>
       )}
 

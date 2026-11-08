@@ -5,6 +5,7 @@ import { findPersonById, updatePerson } from '../api/twentyApi';
 import { type Company, type Person } from '../api/types';
 import { ActivityPanel } from './ActivityPanel';
 import { AddButton } from './AddButton';
+import { isConversationOpen } from '../api/askAiStore';
 import { AskAiButton } from './AskAiButton';
 import { EnrichButton } from './EnrichButton';
 import { Avatar } from './Avatar';
@@ -45,7 +46,9 @@ export const PersonRow = ({
   onAdd,
   onPersonUpdated,
 }: PersonRowProps) => {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [expanded, setExpanded] = useState(
+    () => defaultExpanded || Boolean(person && isConversationOpen({ objectNameSingular: 'person', recordId: person.id })),
+  );
   const displayName = (person && getPersonName(person)) || fallbackName;
   const subtitle = [person?.jobTitle, fallbackSubtitle].filter(Boolean).join(' · ');
 

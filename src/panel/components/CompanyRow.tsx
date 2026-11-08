@@ -4,6 +4,7 @@ import { findCompanyById, updateCompany } from '../api/twentyApi';
 import { type Company } from '../api/types';
 import { ActivityPanel } from './ActivityPanel';
 import { AddButton } from './AddButton';
+import { isConversationOpen } from '../api/askAiStore';
 import { AskAiButton } from './AskAiButton';
 import { EnrichButton } from './EnrichButton';
 import { Avatar } from './Avatar';
@@ -35,7 +36,9 @@ export const CompanyRow = ({
   onAdd,
   onCompanyUpdated,
 }: CompanyRowProps) => {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [expanded, setExpanded] = useState(
+    () => defaultExpanded || Boolean(company && isConversationOpen({ objectNameSingular: 'company', recordId: company.id })),
+  );
   const displayName = company?.name || fallbackName;
   const owner = company?.accountOwner?.name;
 

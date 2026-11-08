@@ -1,5 +1,7 @@
 import { type TwentyClient } from './TwentyClient';
 
+export type ReplyProgress = { text: string; toolCallCount: number };
+
 export type AskAiContext = { objectNameSingular: 'person' | 'company' | 'opportunity'; recordId: string };
 
 type ChatMessage = {
@@ -58,11 +60,13 @@ const getTextFromParts = (message: ChatMessage) =>
     .map((part) => part.textContent)
     .join('\n\n');
 
-const getStreamedText = (chunks: ReplyPollResult['chatStreamCatchupChunks']['chunks']) =>
-  chunks
+const getProgress = (chunks: ReplyPollResult['chatStreamCatchupChunks']['chunks']): ReplyProgress => ({
+  text: chunks
     .filter((chunk) => chunk.type === 'text-delta' && typeof chunk.delta === 'string')
     .map((chunk) => chunk.delta)
-    .join('');
+    .join(''),
+  toolCallCount: chunks.filter((chunk) => chunk.type === 'tool-input-start').length,
+});
 
 // Twenty streams replies over websockets; polling the same catch-up query its front uses keeps the panel simple.
 export const waitForReply = async (
@@ -71,7 +75,7 @@ export const waitForReply = async (
     threadId,
     userMessageId,
     onProgress,
-  }: { threadId: string; userMessageId: string; onProgress: (text: string) => void },
+  }: { threadId: string; userMessageId: string; onProgress: (progress: ReplyProgress) => void },
 ) => {
   const startedAt = Date.now();
 
@@ -92,7 +96,8 @@ export const waitForReply = async (
         .slice(userMessageIndex + 1)
         .find((message) => message.role === 'assistant' && getTextFromParts(message));
 
-    if (reply) {
+    // Twenty saves partial replies while streaming and clears the stream chunks only once the final reply is saved.
+    if (reply && data.chatStreamCatchupChunks.chunks.length === 0) {
       return getTextFromParts(reply);
     }
 
@@ -100,11 +105,7 @@ export const waitForReply = async (
       throw new Error(data.chatStreamCatchupChunks.error.message);
     }
 
-    const streamedText = getStreamedText(data.chatStreamCatchupChunks.chunks);
-
-    if (streamedText) {
-      onProgress(streamedText);
-    }
+    onProgress(getProgress(data.chatStreamCatchupChunks.chunks));
   }
 
   throw new Error("L'IA n'a pas répondu à temps. Retrouve la conversation dans Twenty.");
