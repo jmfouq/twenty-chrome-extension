@@ -3,6 +3,7 @@ import { type TwentyClient } from '../api/TwentyClient';
 import { findOpportunities, getOpportunityStageOptions, updateOpportunity } from '../api/twentyApi';
 import { type Opportunity, type SelectOption } from '../api/types';
 import { ActivityPanel } from './ActivityPanel';
+import { AskAiButton } from './AskAiButton';
 import { EditableField } from './EditableField';
 
 type OpportunityListProps = {
@@ -100,6 +101,13 @@ const OpportunityRow = ({ client, opportunity, stageOptions, onUpdated }: Opport
             onSave={saveField((closeDate) => ({ closeDate: closeDate ? new Date(closeDate).toISOString() : null }))}
           />
           <ActivityPanel client={client} target={{ opportunityId: opportunity.id }} defaultTitle={opportunity.name} />
+          <div className="record-actions">
+            <AskAiButton
+              client={client}
+              context={{ objectNameSingular: 'opportunity', recordId: opportunity.id }}
+              contextLabel={opportunity.name || 'cette opportunité'}
+            />
+          </div>
           <a
             className="open-link"
             href={client.getRecordUrl('opportunity', opportunity.id)}

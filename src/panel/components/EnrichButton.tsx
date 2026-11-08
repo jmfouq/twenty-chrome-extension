@@ -39,7 +39,7 @@ export const EnrichButton = ({ client, objectNameSingular, recordId, onEnriched 
         title="Complète les champs vides avec People Data Labs"
         onClick={() => void enrich()}
       >
-        <img src="/icons/people-data-labs.svg" alt="" />
+        <img src="/icons/sparkles.svg" alt="" />
         {state.status === 'running' ? 'Enrichissement…' : 'Enrichir avec People Data Labs'}
       </button>
       {(state.status === 'done' || state.status === 'error') && (

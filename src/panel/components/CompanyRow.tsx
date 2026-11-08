@@ -4,6 +4,7 @@ import { findCompanyById, updateCompany } from '../api/twentyApi';
 import { type Company } from '../api/types';
 import { ActivityPanel } from './ActivityPanel';
 import { AddButton } from './AddButton';
+import { AskAiButton } from './AskAiButton';
 import { EnrichButton } from './EnrichButton';
 import { Avatar } from './Avatar';
 import { EditableField } from './EditableField';
@@ -97,12 +98,19 @@ export const CompanyRow = ({
           <OpportunityList client={client} personIds={[]} companyIds={[company.id]} />
           <ActivityPanel client={client} target={{ companyId: company.id }} defaultTitle={subject} />
 
-          <EnrichButton
-            client={client}
-            objectNameSingular="company"
-            recordId={company.id}
-            onEnriched={async () => onCompanyUpdated(await findCompanyById(client, company.id))}
-          />
+          <div className="record-actions">
+            <EnrichButton
+              client={client}
+              objectNameSingular="company"
+              recordId={company.id}
+              onEnriched={async () => onCompanyUpdated(await findCompanyById(client, company.id))}
+            />
+            <AskAiButton
+              client={client}
+              context={{ objectNameSingular: 'company', recordId: company.id }}
+              contextLabel={displayName}
+            />
+          </div>
 
           <a className="open-link" href={client.getRecordUrl('company', company.id)} target="_blank" rel="noreferrer">
             Ouvrir dans Twenty ↗

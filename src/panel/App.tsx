@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AskAiChat } from './components/AskAiChat';
 import { TwentyClient } from './api/TwentyClient';
 import { clearSession, readSession, type TwentySession } from './auth/session';
 import { ConnectScreen } from './components/ConnectScreen';
@@ -15,6 +16,7 @@ type SessionState =
 export const App = () => {
   const [sessionState, setSessionState] = useState<SessionState>({ status: 'loading' });
   const page = usePageSnapshot();
+  const [askAiOpen, setAskAiOpen] = useState(false);
 
   useEffect(() => {
     void readSession().then((session) =>
@@ -58,10 +60,26 @@ export const App = () => {
           <img className="connect-logo connect-logo-small" src="/icons/twenty.svg" alt="" />
           {client.workspaceName}
         </a>
-        <button type="button" className="button-ghost" onClick={() => void signOut()}>
-          Déconnexion
-        </button>
+        <span className="header-actions">
+          <button
+            type="button"
+            className="button-secondary ask-ai-button"
+            onClick={() => setAskAiOpen((value) => !value)}
+          >
+            <img src="/icons/sparkles.svg" alt="" />
+            Ask AI
+          </button>
+          <button type="button" className="button-ghost" onClick={() => void signOut()}>
+            Déconnexion
+          </button>
+        </span>
       </header>
+
+      {askAiOpen && (
+        <div className="padded">
+          <AskAiChat client={client} context={null} contextLabel={null} onClose={() => setAskAiOpen(false)} />
+        </div>
+      )}
 
       {page.status === 'loading' && <p className="muted padded">Chargement…</p>}
       {page.status === 'unsupported' && (

@@ -20,6 +20,10 @@ Extension Chrome qui affiche dans un panneau latéral les contacts et sociétés
 
 Sur n'importe quel site, le panneau cherche la société par le domaine du site (sous-domaines ignorés : app.agicap.com donne agicap.com). Si elle n'existe pas, "Ajouter" la crée avec ce domaine et un nom tiré du titre de la page.
 
+## Ask AI
+
+Le bouton "Ask AI" en haut du panneau ouvre une conversation avec l'IA de Twenty. Le même bouton sur une fiche (personne, société, opportunité) envoie la fiche comme contexte. Les conversations sont aussi dans l'historique Ask AI de Twenty ("Continuer dans Twenty"). Il faut que le rôle ait accès à l'IA ; chaque question consomme des crédits IA.
+
 ## People Data Labs
 
 Chaque fiche ouverte a un bouton "Enrichir avec People Data Labs". Il lance l'enrichissement de l'app People Data Labs installée sur le workspace Twenty (champs vides complétés, valeurs existantes conservées). Si l'app n'est pas installée, le panneau l'indique.
