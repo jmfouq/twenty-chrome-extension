@@ -53,12 +53,47 @@ export const normalizeDomain = (urlOrDomain: string): string | null => {
 
 const SECOND_LEVEL_SUFFIXES = new Set(['co', 'com', 'org', 'net', 'ac', 'gov', 'gouv']);
 
+const getRegistrableLabelCount = (labels: string[]) =>
+  labels.length > 2 && SECOND_LEVEL_SUFFIXES.has(labels[labels.length - 2]) ? 3 : 2;
+
+// "app.eu.agicap.com" and "agicap.com" are the same company in Twenty.
+export const getRegistrableDomain = (hostname: string): string => {
+  const labels = hostname
+    .toLowerCase()
+    .replace(/^www\./, '')
+    .split('.');
+
+  return labels.slice(-getRegistrableLabelCount(labels)).join('.');
+};
+
 export const guessCompanyNameFromDomain = (domain: string): string => {
   const labels = domain.split('.');
-  const hasSecondLevelSuffix = labels.length > 2 && SECOND_LEVEL_SUFFIXES.has(labels[labels.length - 2]);
-  const label = labels[labels.length - (hasSecondLevelSuffix ? 3 : 2)] ?? domain;
+  const label = labels[labels.length - getRegistrableLabelCount(labels)] ?? domain;
 
   return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
+const toComparable = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+// Page titles read "Agicap | Logiciel de trésorerie": keep the part that matches the domain.
+export const guessCompanyNameFromPage = (title: string | null | undefined, domain: string): string => {
+  const domainLabel = toComparable(guessCompanyNameFromDomain(domain));
+  const segments = (title ?? '')
+    .split(/\s+[|–—:·•-]\s+/)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+  const match = segments.find((segment) => {
+    const comparable = toComparable(segment);
+
+    return comparable.length > 0 && (comparable.includes(domainLabel) || domainLabel.includes(comparable));
+  });
+
+  return match && match.length <= 60 ? match : guessCompanyNameFromDomain(domain);
 };
 
 export const splitFullName = (fullName: string | null, email: string): { firstName: string; lastName: string } => {

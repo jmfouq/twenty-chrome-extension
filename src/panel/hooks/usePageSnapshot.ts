@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { getRegistrableDomain, guessCompanyNameFromPage } from '../../shared/emailDomains';
 import { type ExtensionMessage, type PageSnapshot } from '../../shared/types';
 
 export type PageSnapshotState =
@@ -8,6 +9,22 @@ const SUPPORTED_SITES = [
   { source: 'gmail', urlPrefix: 'https://mail.google.com/', contentScript: 'gmail-content.js' },
   { source: 'linkedin', urlPrefix: 'https://www.linkedin.com/', contentScript: 'linkedin-content.js' },
 ] as const;
+
+const toWebsiteSnapshot = (tab: chrome.tabs.Tab): PageSnapshot | null => {
+  if (!tab.url?.match(/^https?:\/\//)) {
+    return null;
+  }
+
+  const url = new URL(tab.url);
+
+  if (!url.hostname.includes('.') || /^[\d.]+$/.test(url.hostname)) {
+    return null;
+  }
+
+  const domain = getRegistrableDomain(url.hostname);
+
+  return { source: 'website', url: url.origin, domain, suggestedName: guessCompanyNameFromPage(tab.title, domain) };
+};
 
 const requestSnapshot = (tabId: number) =>
   chrome.tabs.sendMessage<ExtensionMessage, PageSnapshot>(tabId, { type: 'getSnapshot' });
@@ -31,6 +48,15 @@ export const usePageSnapshot = (): PageSnapshotState => {
     const refresh = async () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const site = SUPPORTED_SITES.find(({ urlPrefix }) => tab?.url?.startsWith(urlPrefix));
+
+      const websiteSnapshot = tab && !site ? toWebsiteSnapshot(tab) : null;
+
+      if (tab?.id && websiteSnapshot) {
+        activeTabIdRef.current = tab.id;
+        setState({ status: 'ready', snapshot: websiteSnapshot });
+
+        return;
+      }
 
       if (!tab?.id || !site) {
         activeTabIdRef.current = null;
@@ -59,7 +85,9 @@ export const usePageSnapshot = (): PageSnapshotState => {
     };
 
     const handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
-      if (changeInfo.status === 'complete' || (changeInfo.url && tabId === activeTabIdRef.current)) {
+      const isActiveTabChange = tabId === activeTabIdRef.current && Boolean(changeInfo.url || changeInfo.title);
+
+      if (changeInfo.status === 'complete' || isActiveTabChange) {
         void refresh();
       }
     };

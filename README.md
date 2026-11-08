@@ -1,4 +1,4 @@
-# Twenty pour Gmail et LinkedIn
+# Twenty pour Gmail, LinkedIn et le web
 
 Extension Chrome qui affiche dans un panneau latéral les contacts et sociétés de l'email Gmail ouvert, ou du profil LinkedIn affiché, tels qu'ils existent dans ton CRM Twenty.
 
@@ -15,6 +15,10 @@ Extension Chrome qui affiche dans un panneau latéral les contacts et sociétés
 - **Suggestions "Depuis LinkedIn"** : si le poste affiché sur LinkedIn diffère de celui de Twenty, un bouton propose de l'exporter. Si la société actuelle n'existe pas dans Twenty, un bouton la crée et y rattache la personne.
 - **Page d'une entreprise** : la société est retrouvée par son lien LinkedIn, puis par le domaine de son site ou son nom. Le domaine du site et le lien LinkedIn peuvent être exportés vers la fiche en un clic.
 - LinkedIn n'affiche pas les emails : les personnes ajoutées depuis LinkedIn n'ont pas d'email.
+
+## Autres sites
+
+Sur n'importe quel site, le panneau cherche la société par le domaine du site (sous-domaines ignorés : app.agicap.com donne agicap.com). Si elle n'existe pas, "Ajouter" la crée avec ce domaine et un nom tiré du titre de la page.
 
 ## People Data Labs
 

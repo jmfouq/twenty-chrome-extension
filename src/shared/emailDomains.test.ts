@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getRegistrableDomain,
   guessCompanyNameFromDomain,
+  guessCompanyNameFromPage,
   isAutomatedEmail,
   isPersonalEmailDomain,
   normalizeDomain,
@@ -32,5 +34,16 @@ describe('emailDomains', () => {
       firstName: 'Lisa',
       lastName: 'Cosme',
     });
+  });
+
+  it('reduces a website host to the company domain', () => {
+    expect(getRegistrableDomain('app.eu.agicap.com')).toBe('agicap.com');
+    expect(getRegistrableDomain('www.shop.acme.co.uk')).toBe('acme.co.uk');
+  });
+
+  it('guesses the company name from the page title, or else the domain', () => {
+    expect(guessCompanyNameFromPage('Agicap | Logiciel de gestion de trésorerie', 'agicap.com')).toBe('Agicap');
+    expect(guessCompanyNameFromPage('Pricing - Pennylane', 'pennylane.com')).toBe('Pennylane');
+    expect(guessCompanyNameFromPage('The best tool for finance teams', 'qonto.com')).toBe('Qonto');
   });
 });

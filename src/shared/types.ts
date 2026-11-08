@@ -32,6 +32,15 @@ export type LinkedinSnapshot = {
   page: LinkedinPersonPage | LinkedinCompanyPage | null;
 };
 
-export type PageSnapshot = ({ source: 'gmail' } & GmailSnapshot) | ({ source: 'linkedin' } & LinkedinSnapshot);
+export type WebsiteSnapshot = {
+  url: string;
+  domain: string;
+  suggestedName: string;
+};
+
+export type PageSnapshot =
+  | ({ source: 'gmail' } & GmailSnapshot)
+  | ({ source: 'linkedin' } & LinkedinSnapshot)
+  | ({ source: 'website' } & WebsiteSnapshot);
 
 export type ExtensionMessage = { type: 'getSnapshot' } | { type: 'snapshotChanged'; snapshot: PageSnapshot };

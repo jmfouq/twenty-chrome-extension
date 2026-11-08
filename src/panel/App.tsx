@@ -4,6 +4,7 @@ import { clearSession, readSession, type TwentySession } from './auth/session';
 import { ConnectScreen } from './components/ConnectScreen';
 import { LinkedinView } from './components/LinkedinView';
 import { MainView } from './components/MainView';
+import { WebsiteView } from './components/WebsiteView';
 import { usePageSnapshot } from './hooks/usePageSnapshot';
 
 type SessionState =
@@ -65,11 +66,14 @@ export const App = () => {
       {page.status === 'loading' && <p className="muted padded">Chargement…</p>}
       {page.status === 'unsupported' && (
         <div className="empty-state">
-          <p>Ouvre un email dans Gmail, ou un profil ou une page entreprise sur LinkedIn.</p>
+          <p>Ouvre un email dans Gmail, un profil LinkedIn ou le site d'une entreprise.</p>
         </div>
       )}
       {page.status === 'ready' && page.snapshot.source === 'gmail' && (
         <MainView client={client} snapshot={page.snapshot} />
+      )}
+      {page.status === 'ready' && page.snapshot.source === 'website' && (
+        <WebsiteView key={page.snapshot.domain} client={client} website={page.snapshot} />
       )}
       {page.status === 'ready' &&
         page.snapshot.source === 'linkedin' &&

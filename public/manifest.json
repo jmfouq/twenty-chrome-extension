@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Twenty pour Gmail et LinkedIn",
+  "name": "Twenty pour Gmail, LinkedIn et le web",
   "version": "0.1.0",
-  "description": "Voir, ajouter et modifier dans Twenty les contacts et sociétés de tes emails Gmail et de LinkedIn.",
+  "description": "Voir, ajouter et modifier dans Twenty les contacts et sociétés de Gmail, de LinkedIn et des sites que tu visites.",
   "action": {
     "default_title": "Ouvrir Twenty",
     "default_icon": {
@@ -22,7 +22,8 @@
     "sidePanel",
     "storage",
     "identity",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
     "https://mail.google.com/*",
