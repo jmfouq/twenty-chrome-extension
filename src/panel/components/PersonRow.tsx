@@ -28,7 +28,7 @@ type PersonRowProps = {
   onPersonUpdated: (person: Person) => void;
 };
 
-const getPersonName = (person: Person) =>
+export const getPersonName = (person: Person) =>
   [person.name?.firstName, person.name?.lastName].filter(Boolean).join(' ').trim();
 
 export const PersonRow = ({

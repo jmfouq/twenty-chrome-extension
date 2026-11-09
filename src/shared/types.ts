@@ -3,10 +3,18 @@ export type DetectedContact = {
   name: string | null;
 };
 
+export type GmailAttachment = {
+  name: string;
+  mimeType: string;
+  downloadUrl: string;
+  senderName: string | null;
+};
+
 export type GmailSnapshot = {
   ownEmail: string | null;
   subject: string | null;
   contacts: DetectedContact[];
+  attachments: GmailAttachment[];
 };
 
 export type LinkedinPersonPage = {
@@ -43,4 +51,9 @@ export type PageSnapshot =
   | ({ source: 'linkedin' } & LinkedinSnapshot)
   | ({ source: 'website' } & WebsiteSnapshot);
 
-export type ExtensionMessage = { type: 'getSnapshot' } | { type: 'snapshotChanged'; snapshot: PageSnapshot };
+export type ExtensionMessage =
+  | { type: 'getSnapshot' }
+  | { type: 'snapshotChanged'; snapshot: PageSnapshot }
+  | { type: 'downloadAttachment'; url: string };
+
+export type DownloadAttachmentResponse = { dataUrl: string } | { error: string };

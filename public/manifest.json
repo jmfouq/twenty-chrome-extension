@@ -27,7 +27,8 @@
   ],
   "host_permissions": [
     "https://mail.google.com/*",
-    "https://www.linkedin.com/*"
+    "https://www.linkedin.com/*",
+    "https://mail-attachment.googleusercontent.com/*"
   ],
   "optional_host_permissions": [
     "https://*/*",

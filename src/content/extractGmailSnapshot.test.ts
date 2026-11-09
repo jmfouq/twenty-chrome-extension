@@ -17,6 +17,7 @@ describe('extractGmailSnapshot', () => {
       ownEmail: 'me@acme.com',
       subject: null,
       contacts: [],
+      attachments: [],
     });
   });
 
@@ -51,6 +52,7 @@ describe('extractGmailSnapshot', () => {
         { email: 'julia@helpscout.com', name: 'Julia Martin' },
         { email: 'nick@attio.com', name: null },
       ],
+      attachments: [],
     });
   });
 });

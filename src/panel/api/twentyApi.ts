@@ -451,3 +451,29 @@ const requestOpportunityStageOptions = async (client: TwentyClient) => {
 
   return (stage?.options ?? []).map(({ value, label }) => ({ value, label }));
 };
+
+const findOpportunitiesByName = async (client: TwentyClient, pattern: string) => {
+  const data = await withReadableFields(() =>
+    client.graphql<{ opportunities: Connection<Opportunity> }>(
+      `query SearchOpportunities($filter: OpportunityFilterInput) {
+        opportunities(filter: $filter, first: 10) { edges { node { ${opportunityFields()} } } }
+      }`,
+      { filter: { name: { ilike: pattern } } },
+    ),
+  );
+
+  return nodes(data.opportunities);
+};
+
+export const searchRecordsByName = async (client: TwentyClient, query: string) => {
+  const pattern = `%${query.trim()}%`;
+  const [people, companies, opportunities] = await Promise.all([
+    findPeople(client, {
+      or: [{ name: { firstName: { ilike: pattern } } }, { name: { lastName: { ilike: pattern } } }],
+    }),
+    findCompanies(client, { name: { ilike: pattern } }),
+    findOpportunitiesByName(client, pattern),
+  ]);
+
+  return { people, companies, opportunities };
+};

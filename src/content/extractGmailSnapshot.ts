@@ -1,5 +1,6 @@
 import { getEmailDomain, isAutomatedEmail, isPersonalEmailDomain } from '../shared/emailDomains';
 import { type DetectedContact, type GmailSnapshot } from '../shared/types';
+import { extractGmailAttachments } from './extractGmailAttachments';
 
 const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
 
@@ -35,7 +36,7 @@ export const extractGmailSnapshot = (document: Document): GmailSnapshot => {
   const subjectElement = document.querySelector(OPEN_THREAD_SUBJECT_SELECTOR);
 
   if (!subjectElement) {
-    return { ownEmail, subject: null, contacts: [] };
+    return { ownEmail, subject: null, contacts: [], attachments: [] };
   }
 
   const contactsByEmail = new Map<string, DetectedContact>();
@@ -62,5 +63,6 @@ export const extractGmailSnapshot = (document: Document): GmailSnapshot => {
     ownEmail,
     subject: subjectElement.textContent?.trim() || null,
     contacts: [...contactsByEmail.values()],
+    attachments: extractGmailAttachments(document),
   };
 };
