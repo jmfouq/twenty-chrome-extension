@@ -17,9 +17,10 @@ import { PersonRow } from "./PersonRow";
 type MainViewProps = {
   client: TwentyClient;
   snapshot: GmailSnapshot;
+  source: "gmail" | "calendar";
 };
 
-export const MainView = ({ client, snapshot }: MainViewProps) => {
+export const MainView = ({ client, snapshot, source }: MainViewProps) => {
   const { contacts, subject, attachments } = snapshot;
   const {
     loading,
@@ -93,7 +94,11 @@ export const MainView = ({ client, snapshot }: MainViewProps) => {
   if (contacts.length === 0 && attachments.length === 0) {
     return (
       <div className="empty-state">
-        <p>Ouvre un email pour voir ses contacts dans Twenty.</p>
+        <p>
+          {source === "calendar"
+            ? "Ouvre un événement pour voir ses invités dans Twenty."
+            : "Ouvre un email pour voir ses contacts dans Twenty."}
+        </p>
       </div>
     );
   }

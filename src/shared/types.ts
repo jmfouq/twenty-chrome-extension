@@ -48,6 +48,7 @@ export type WebsiteSnapshot = {
 
 export type PageSnapshot =
   | ({ source: 'gmail' } & GmailSnapshot)
+  | ({ source: 'calendar' } & GmailSnapshot)
   | ({ source: 'linkedin' } & LinkedinSnapshot)
   | ({ source: 'website' } & WebsiteSnapshot);
 
