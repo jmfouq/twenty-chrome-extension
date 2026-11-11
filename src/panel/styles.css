@@ -814,3 +814,67 @@ a.chat-reference:hover {
   align-items: center;
   gap: 8px;
 }
+
+.contact-search {
+  padding: 8px 12px 0;
+}
+
+.contact-search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.contact-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contact-result {
+  padding: 8px 10px;
+}
+
+.contact-result-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contact-result-header .record-title {
+  color: var(--text);
+}
+
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 6px 0 0 38px;
+}
+
+.contact-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.contact-value a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact-copy {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.contact-company-people {
+  padding: 4px 10px 10px;
+  background: var(--background-secondary);
+}

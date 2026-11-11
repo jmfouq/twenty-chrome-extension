@@ -8,6 +8,7 @@ import {
 } from "./api/askAiStore";
 import { clearSession, readSession, type TwentySession } from "./auth/session";
 import { ConnectScreen } from "./components/ConnectScreen";
+import { ContactSearch } from "./components/ContactSearch";
 import { LinkedinView } from "./components/LinkedinView";
 import { MainView } from "./components/MainView";
 import { WebsiteView } from "./components/WebsiteView";
@@ -23,6 +24,8 @@ export const App = () => {
     status: "loading",
   });
   const page = usePageSnapshot();
+  const [searchQuery, setSearchQuery] = useState("");
+  const isSearching = searchQuery.trim().length >= 2;
   const { open: askAiOpen } = useConversation(GENERAL_CONVERSATION_KEY);
 
   useEffect(() => {
@@ -109,14 +112,32 @@ export const App = () => {
         </span>
       </header>
 
+      <div className="contact-search">
+        <input
+          type="search"
+          placeholder="Chercher un contact ou une société…"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              setSearchQuery("");
+            }
+          }}
+        />
+      </div>
+
       {askAiOpen && (
         <div className="padded">
           <AskAiChat client={client} context={null} contextLabel={null} />
         </div>
       )}
 
-      {page.status === "loading" && <p className="muted padded">Chargement…</p>}
-      {page.status === "unsupported" && (
+      {isSearching && <ContactSearch client={client} query={searchQuery} />}
+
+      {!isSearching && page.status === "loading" && (
+        <p className="muted padded">Chargement…</p>
+      )}
+      {!isSearching && page.status === "unsupported" && (
         <div className="empty-state">
           <p>
             Ouvre un email dans Gmail, un événement dans Google Agenda, un
@@ -124,7 +145,8 @@ export const App = () => {
           </p>
         </div>
       )}
-      {page.status === "ready" &&
+      {!isSearching &&
+        page.status === "ready" &&
         (page.snapshot.source === "gmail" ||
           page.snapshot.source === "calendar") && (
           <MainView
@@ -133,14 +155,17 @@ export const App = () => {
             source={page.snapshot.source}
           />
         )}
-      {page.status === "ready" && page.snapshot.source === "website" && (
-        <WebsiteView
-          key={page.snapshot.domain}
-          client={client}
-          website={page.snapshot}
-        />
-      )}
-      {page.status === "ready" &&
+      {!isSearching &&
+        page.status === "ready" &&
+        page.snapshot.source === "website" && (
+          <WebsiteView
+            key={page.snapshot.domain}
+            client={client}
+            website={page.snapshot}
+          />
+        )}
+      {!isSearching &&
+        page.status === "ready" &&
         page.snapshot.source === "linkedin" &&
         (page.snapshot.page ? (
           <LinkedinView

@@ -477,3 +477,44 @@ export const searchRecordsByName = async (client: TwentyClient, query: string) =
 
   return { people, companies, opportunities };
 };
+
+export const buildContactSearchFilters = (query: string) => {
+  const trimmed = query.trim();
+  const pattern = `%${trimmed}%`;
+  const [firstWord, ...otherWords] = trimmed.split(/\s+/);
+  const rest = `%${otherWords.join(' ')}%`;
+  const fullNameFilters =
+    otherWords.length > 0
+      ? [
+          { and: [{ name: { firstName: { ilike: `%${firstWord}%` } } }, { name: { lastName: { ilike: rest } } }] },
+          { and: [{ name: { lastName: { ilike: `%${firstWord}%` } } }, { name: { firstName: { ilike: rest } } }] },
+        ]
+      : [];
+
+  return {
+    people: {
+      or: [
+        { name: { firstName: { ilike: pattern } } },
+        { name: { lastName: { ilike: pattern } } },
+        { emails: { primaryEmail: { ilike: pattern } } },
+        ...fullNameFilters,
+      ],
+    },
+    companies: {
+      or: [{ name: { ilike: pattern } }, { domainName: { primaryLinkUrl: { ilike: pattern } } }],
+    },
+  };
+};
+
+export const searchContacts = async (client: TwentyClient, query: string) => {
+  const filters = buildContactSearchFilters(query);
+  const [people, companies] = await Promise.all([
+    findPeople(client, filters.people),
+    findCompanies(client, filters.companies),
+  ]);
+
+  return { people, companies };
+};
+
+export const findPeopleByCompany = (client: TwentyClient, companyId: string) =>
+  findPeople(client, { companyId: { eq: companyId } });
