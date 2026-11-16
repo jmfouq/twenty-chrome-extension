@@ -104,6 +104,21 @@ export const PersonRow = ({
               onSave={saveField((jobTitle) => ({ jobTitle }))}
             />
           )}
+          {'emails' in person && (
+            <EditableField
+              label="Email"
+              value={person.emails?.primaryEmail || null}
+              onSave={saveField((primaryEmail) => ({
+                emails: { primaryEmail, additionalEmails: person.emails?.additionalEmails ?? [] },
+              }))}
+            />
+          )}
+          {(person.emails?.additionalEmails ?? []).length > 0 && (
+            <div className="field">
+              <span className="field-label">Autres emails</span>
+              <span className="field-value">{person.emails?.additionalEmails?.join(', ')}</span>
+            </div>
+          )}
           {'phones' in person && (
             <EditableField
               label="Téléphone"

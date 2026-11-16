@@ -1,17 +1,32 @@
 import { useEffect, useState } from "react";
 import { formatTwentyPhone } from "../../shared/phone";
+import { type PageSnapshot } from "../../shared/types";
 import { type TwentyClient } from "../api/TwentyClient";
-import { findPeopleByCompany, searchContacts } from "../api/twentyApi";
+import {
+  findPeopleByCompany,
+  searchContacts,
+  updateCompany,
+  updatePerson,
+} from "../api/twentyApi";
 import { type Company, type Person } from "../api/types";
+import { AddButton } from "./AddButton";
 import { Avatar } from "./Avatar";
-import { getPersonName } from "./PersonRow";
+import { CompanyRow } from "./CompanyRow";
+import { getCompanyPageLinks, getPersonPageLinks } from "./pageLinks";
+import { getPersonName, PersonRow } from "./PersonRow";
 
 type ContactSearchProps = {
   client: TwentyClient;
   query: string;
+  snapshot: PageSnapshot | null;
+  onLinked: () => void;
 };
 
 type SearchResults = { people: Person[]; companies: Company[] };
+
+type OpenedRecord =
+  | { kind: "person"; person: Person }
+  | { kind: "company"; company: Company };
 
 // The async clipboard API is refused when the side panel does not have focus.
 const copyWithSelection = (value: string) => {
@@ -92,11 +107,11 @@ const ContactDetails = ({ person }: { person: Person }) => {
 };
 
 const PersonResult = ({
-  client,
   person,
+  onOpen,
 }: {
-  client: TwentyClient;
   person: Person;
+  onOpen: (record: OpenedRecord) => void;
 }) => {
   const name = getPersonName(person) || "Sans nom";
   const subtitle = [person.jobTitle, person.company?.name]
@@ -108,16 +123,16 @@ const PersonResult = ({
       <div className="contact-result-header">
         <Avatar label={name} imageUrl={person.avatarUrl} />
         <span className="record-text">
-          <a
-            className="record-title"
-            href={client.getRecordUrl("person", person.id)}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {name}
-          </a>
+          <span className="record-title">{name}</span>
           {subtitle && <span className="record-subtitle">{subtitle}</span>}
         </span>
+        <button
+          type="button"
+          className="button-small"
+          onClick={() => onOpen({ kind: "person", person })}
+        >
+          Ouvrir
+        </button>
       </div>
       <div className="contact-details">
         <ContactDetails person={person} />
@@ -129,9 +144,11 @@ const PersonResult = ({
 const CompanyResult = ({
   client,
   company,
+  onOpen,
 }: {
   client: TwentyClient;
   company: Company;
+  onOpen: (record: OpenedRecord) => void;
 }) => {
   const [people, setPeople] = useState<Person[] | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -167,14 +184,13 @@ const CompanyResult = ({
           </span>
           <span className="chevron">{expanded ? "▾" : "▸"}</span>
         </button>
-        <a
-          className="open-link"
-          href={client.getRecordUrl("company", company.id)}
-          target="_blank"
-          rel="noreferrer"
+        <button
+          type="button"
+          className="button-small"
+          onClick={() => onOpen({ kind: "company", company })}
         >
-          ↗
-        </a>
+          Ouvrir
+        </button>
       </div>
       {expanded && (
         <div className="contact-company-people">
@@ -186,7 +202,7 @@ const CompanyResult = ({
           {people && people.length > 0 && (
             <ul className="record-list">
               {people.map((person) => (
-                <PersonResult key={person.id} client={client} person={person} />
+                <PersonResult key={person.id} person={person} onOpen={onOpen} />
               ))}
             </ul>
           )}
@@ -196,9 +212,100 @@ const CompanyResult = ({
   );
 };
 
-export const ContactSearch = ({ client, query }: ContactSearchProps) => {
+const OpenedRecordView = ({
+  client,
+  record,
+  snapshot,
+  onRecordChange,
+  onBack,
+  onLinked,
+}: {
+  client: TwentyClient;
+  record: OpenedRecord;
+  snapshot: PageSnapshot | null;
+  onRecordChange: (record: OpenedRecord) => void;
+  onBack: () => void;
+  onLinked: () => void;
+}) => {
+  const links =
+    record.kind === "person"
+      ? getPersonPageLinks(snapshot, record.person)
+      : getCompanyPageLinks(snapshot, record.company);
+
+  const link = async (data: Record<string, unknown>) => {
+    if (record.kind === "person") {
+      await updatePerson(client, record.person.id, data);
+    } else {
+      await updateCompany(client, record.company.id, data);
+    }
+
+    onLinked();
+  };
+
+  return (
+    <div className="padded contact-search-results">
+      <button
+        type="button"
+        className="button-ghost contact-back"
+        onClick={onBack}
+      >
+        ← Résultats
+      </button>
+      {links.length > 0 && (
+        <div className="contact-links">
+          {links.map((pageLink) => (
+            <AddButton
+              key={pageLink.key}
+              label={pageLink.label}
+              onAdd={() => link(pageLink.data)}
+            />
+          ))}
+        </div>
+      )}
+      <ul className="record-list">
+        {record.kind === "person" ? (
+          <PersonRow
+            client={client}
+            fallbackName={getPersonName(record.person) || "Sans nom"}
+            fallbackSubtitle={record.person.company?.name ?? null}
+            person={record.person}
+            suggestedCompany={undefined}
+            defaultExpanded
+            subject={null}
+            onAdd={async () => undefined}
+            onPersonUpdated={(person) =>
+              onRecordChange({ kind: "person", person })
+            }
+          />
+        ) : (
+          <CompanyRow
+            client={client}
+            fallbackName={record.company.name || "Sans nom"}
+            subtitle={record.company.domainName?.primaryLinkUrl ?? null}
+            logoUrl={null}
+            company={record.company}
+            defaultExpanded
+            subject={null}
+            onAdd={async () => undefined}
+            onCompanyUpdated={(company) =>
+              onRecordChange({ kind: "company", company })
+            }
+          />
+        )}
+      </ul>
+    </div>
+  );
+};
+
+export const ContactSearch = ({
+  client,
+  query,
+  snapshot,
+  onLinked,
+}: ContactSearchProps) => {
   const [results, setResults] = useState<SearchResults | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [opened, setOpened] = useState<OpenedRecord | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -227,6 +334,19 @@ export const ContactSearch = ({ client, query }: ContactSearchProps) => {
     };
   }, [client, query]);
 
+  if (opened) {
+    return (
+      <OpenedRecordView
+        client={client}
+        record={opened}
+        snapshot={snapshot}
+        onRecordChange={setOpened}
+        onBack={() => setOpened(null)}
+        onLinked={onLinked}
+      />
+    );
+  }
+
   if (error) {
     return <p className="error-text padded">{error}</p>;
   }
@@ -246,7 +366,7 @@ export const ContactSearch = ({ client, query }: ContactSearchProps) => {
           <h3>Personnes</h3>
           <ul className="record-list">
             {results.people.map((person) => (
-              <PersonResult key={person.id} client={client} person={person} />
+              <PersonResult key={person.id} person={person} onOpen={setOpened} />
             ))}
           </ul>
         </section>
@@ -260,6 +380,7 @@ export const ContactSearch = ({ client, query }: ContactSearchProps) => {
                 key={company.id}
                 client={client}
                 company={company}
+                onOpen={setOpened}
               />
             ))}
           </ul>

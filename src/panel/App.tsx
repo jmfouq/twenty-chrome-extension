@@ -132,7 +132,14 @@ export const App = () => {
         </div>
       )}
 
-      {isSearching && <ContactSearch client={client} query={searchQuery} />}
+      {isSearching && (
+        <ContactSearch
+          client={client}
+          query={searchQuery}
+          snapshot={page.status === "ready" ? page.snapshot : null}
+          onLinked={() => setSearchQuery("")}
+        />
+      )}
 
       {!isSearching && page.status === "loading" && (
         <p className="muted padded">Chargement…</p>

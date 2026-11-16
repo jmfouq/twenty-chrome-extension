@@ -878,3 +878,19 @@ a.chat-reference:hover {
   padding: 4px 10px 10px;
   background: var(--background-secondary);
 }
+
+.contact-back {
+  align-self: flex-start;
+  padding-left: 0;
+}
+
+.contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contact-links .add-button-wrapper {
+  align-items: stretch;
+  max-width: none;
+}
