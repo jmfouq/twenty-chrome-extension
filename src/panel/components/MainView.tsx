@@ -17,7 +17,7 @@ import { PersonRow } from "./PersonRow";
 type MainViewProps = {
   client: TwentyClient;
   snapshot: GmailSnapshot;
-  source: "gmail" | "calendar";
+  source: "gmail" | "outlook" | "calendar";
 };
 
 export const MainView = ({ client, snapshot, source }: MainViewProps) => {

@@ -147,7 +147,7 @@ export const App = () => {
       {!isSearching && page.status === "unsupported" && (
         <div className="empty-state">
           <p>
-            Ouvre un email dans Gmail, un événement dans Google Agenda, un
+            Ouvre un email dans Gmail ou Outlook, un événement dans Google Agenda, un
             profil LinkedIn ou le site d'une entreprise.
           </p>
         </div>
@@ -155,6 +155,7 @@ export const App = () => {
       {!isSearching &&
         page.status === "ready" &&
         (page.snapshot.source === "gmail" ||
+          page.snapshot.source === "outlook" ||
           page.snapshot.source === "calendar") && (
           <MainView
             client={client}

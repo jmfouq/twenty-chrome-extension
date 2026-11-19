@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Twenty pour Gmail, Agenda, LinkedIn et le web",
+  "name": "Twenty pour Gmail, Outlook, Agenda, LinkedIn et le web",
   "version": "0.1.0",
-  "description": "Voir, ajouter et modifier dans Twenty les contacts et sociétés de Gmail, de LinkedIn et des sites que tu visites.",
+  "description": "Voir, ajouter et modifier dans Twenty les contacts et sociétés de Gmail, Outlook, LinkedIn et des sites que tu visites.",
   "action": {
     "default_title": "Ouvrir Twenty",
     "default_icon": {
@@ -28,6 +28,9 @@
   "host_permissions": [
     "https://mail.google.com/*",
     "https://calendar.google.com/*",
+    "https://outlook.live.com/*",
+    "https://outlook.office.com/*",
+    "https://outlook.office365.com/*",
     "https://www.linkedin.com/*",
     "https://mail-attachment.googleusercontent.com/*"
   ],
@@ -52,6 +55,17 @@
       ],
       "js": [
         "calendar-content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://outlook.live.com/*",
+        "https://outlook.office.com/*",
+        "https://outlook.office365.com/*"
+      ],
+      "js": [
+        "outlook-content.js"
       ],
       "run_at": "document_idle"
     },

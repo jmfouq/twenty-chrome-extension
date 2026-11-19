@@ -28,7 +28,10 @@ export const getPersonPageLinks = (snapshot: PageSnapshot | null, person: Person
         ];
   }
 
-  if ((snapshot?.source === 'gmail' || snapshot?.source === 'calendar') && 'emails' in person) {
+  if (
+    (snapshot?.source === 'gmail' || snapshot?.source === 'outlook' || snapshot?.source === 'calendar') &&
+    'emails' in person
+  ) {
     const knownEmails = getPersonEmails(person);
     const primaryEmail = person.emails?.primaryEmail || null;
     const additionalEmails = person.emails?.additionalEmails ?? [];

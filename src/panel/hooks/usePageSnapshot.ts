@@ -8,6 +8,9 @@ export type PageSnapshotState =
 const SUPPORTED_SITES = [
   { source: 'gmail', urlPrefix: 'https://mail.google.com/', contentScript: 'gmail-content.js' },
   { source: 'calendar', urlPrefix: 'https://calendar.google.com/', contentScript: 'calendar-content.js' },
+  { source: 'outlook', urlPrefix: 'https://outlook.live.com/', contentScript: 'outlook-content.js' },
+  { source: 'outlook', urlPrefix: 'https://outlook.office.com/', contentScript: 'outlook-content.js' },
+  { source: 'outlook', urlPrefix: 'https://outlook.office365.com/', contentScript: 'outlook-content.js' },
   { source: 'linkedin', urlPrefix: 'https://www.linkedin.com/', contentScript: 'linkedin-content.js' },
 ] as const;
 
