@@ -10,6 +10,7 @@ import { AskAiButton } from './AskAiButton';
 import { EnrichButton } from './EnrichButton';
 import { Avatar } from './Avatar';
 import { EditableField } from './EditableField';
+import { InteractionSummary } from './InteractionSummary';
 import { OpportunityList } from './OpportunityList';
 
 type PersonRowProps = {
@@ -83,6 +84,7 @@ export const PersonRow = ({
 
       {person && expanded && (
         <div className="record-details">
+          <InteractionSummary client={client} personId={person.id} />
           {'name' in person && (
             <EditableField
               label="Prénom"

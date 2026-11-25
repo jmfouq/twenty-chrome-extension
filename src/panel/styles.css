@@ -894,3 +894,32 @@ a.chat-reference:hover {
   align-items: stretch;
   max-width: none;
 }
+
+.interaction-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.interaction-value {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.interaction-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interaction-loading {
+  padding: 4px 0 8px;
+}
+
+.interaction-summary .field {
+  grid-template-columns: 110px 1fr;
+}

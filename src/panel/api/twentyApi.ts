@@ -518,3 +518,100 @@ export const searchContacts = async (client: TwentyClient, query: string) => {
 
 export const findPeopleByCompany = (client: TwentyClient, companyId: string) =>
   findPeople(client, { companyId: { eq: companyId } });
+
+export type Meeting = {
+  id: string;
+  title: string | null;
+  startsAt: string;
+  conferenceLink: { primaryLinkUrl: string | null } | null;
+};
+
+export type EmailSummary = { id: string; subject: string | null; receivedAt: string };
+
+export type PersonInteractions = {
+  nextMeeting: Meeting | null | undefined;
+  lastMeeting: Meeting | null | undefined;
+  lastEmail: EmailSummary | null | undefined;
+};
+
+const PARTICIPATION_LIMIT = 200;
+
+const findPersonMeetings = async (client: TwentyClient, personId: string, now: string) => {
+  const participations = await client.graphql<{ calendarEventParticipants: Connection<{ calendarEventId: string }> }>(
+    `query PersonMeetingIds($personId: UUID) {
+      calendarEventParticipants(filter: { personId: { eq: $personId } }, first: ${PARTICIPATION_LIMIT}, orderBy: [{ createdAt: DescNullsLast }]) {
+        edges { node { calendarEventId } }
+      }
+    }`,
+    { personId },
+  );
+  const eventIds = [...new Set(nodes(participations.calendarEventParticipants).map((node) => node.calendarEventId))];
+
+  if (eventIds.length === 0) {
+    return { nextMeeting: null, lastMeeting: null };
+  }
+
+  // Twenty rejects two aliases of the same root query in one request.
+  const findMeeting = async (startsAt: { gte: string } | { lt: string }, direction: 'AscNullsLast' | 'DescNullsLast') => {
+    const data = await client.graphql<{ calendarEvents: Connection<Meeting> }>(
+      `query PersonMeeting($filter: CalendarEventFilterInput, $orderBy: [CalendarEventOrderByInput]) {
+        calendarEvents(filter: $filter, orderBy: $orderBy, first: 1) {
+          edges { node { id title startsAt conferenceLink { primaryLinkUrl } } }
+        }
+      }`,
+      {
+        filter: { and: [{ id: { in: eventIds } }, { startsAt }, { isCanceled: { eq: false } }] },
+        orderBy: [{ startsAt: direction }],
+      },
+    );
+
+    return nodes(data.calendarEvents)[0] ?? null;
+  };
+  const [nextMeeting, lastMeeting] = await Promise.all([
+    findMeeting({ gte: now }, 'AscNullsLast'),
+    findMeeting({ lt: now }, 'DescNullsLast'),
+  ]);
+
+  return { nextMeeting, lastMeeting };
+};
+
+const findPersonLastEmail = async (client: TwentyClient, personId: string) => {
+  const participations = await client.graphql<{ messageParticipants: Connection<{ messageId: string }> }>(
+    `query PersonMessageIds($personId: UUID) {
+      messageParticipants(filter: { personId: { eq: $personId } }, first: ${PARTICIPATION_LIMIT}, orderBy: [{ createdAt: DescNullsLast }]) {
+        edges { node { messageId } }
+      }
+    }`,
+    { personId },
+  );
+  const messageIds = [...new Set(nodes(participations.messageParticipants).map((node) => node.messageId))];
+
+  if (messageIds.length === 0) {
+    return null;
+  }
+
+  const data = await client.graphql<{ messages: Connection<EmailSummary> }>(
+    `query PersonLastEmail($messageIds: [UUID!]) {
+      messages(filter: { id: { in: $messageIds } }, orderBy: [{ receivedAt: DescNullsLast }], first: 1) {
+        edges { node { id subject receivedAt } }
+      }
+    }`,
+    { messageIds },
+  );
+
+  return nodes(data.messages)[0] ?? null;
+};
+
+// Each part fails on its own when the workspace hides calendar or email data from the app (undefined = unavailable).
+export const findPersonInteractions = async (client: TwentyClient, personId: string): Promise<PersonInteractions> => {
+  const [meetings, lastEmail] = await Promise.allSettled([
+    findPersonMeetings(client, personId, new Date().toISOString()),
+    findPersonLastEmail(client, personId),
+  ]);
+
+  return {
+    nextMeeting: meetings.status === 'fulfilled' ? meetings.value.nextMeeting : undefined,
+    lastMeeting: meetings.status === 'fulfilled' ? meetings.value.lastMeeting : undefined,
+    lastEmail: lastEmail.status === 'fulfilled' ? lastEmail.value : undefined,
+  };
+};
