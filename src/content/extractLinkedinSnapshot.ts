@@ -5,9 +5,14 @@ const CURRENT_COMPANY_LABEL_PATTERN = /(?:current company|entreprise actuelle)\s
 const COMPANY_LINK_LABEL_PATTERN = /^[^:]*:\s*(.+)$/;
 const WEBSITE_LABEL_PATTERN = /site web|website/i;
 // "chez", "at" and "@" name the company more reliably than a dash, which also joins words in titles.
-const HEADLINE_ROLE_PATTERNS = [/^(.+?)\s*,?\s+(?:chez|at|@)\s+(.+)$/i, /^(.+?)\s+[-–]\s+(.+)$/];
+const HEADLINE_ROLE_PATTERNS = [/^(.+?)\s*,?\s+(?:(?:chez|at)\s+|@\s*)(.+)$/i, /^(.+?)\s+[-–]\s+(.+)$/];
 const MORE_COMPANIES_SUFFIX_PATTERN = /\s*\+\s*\d+\s*(?:autres?|others?|more)\s*$/i;
 const MAX_CARD_DEPTH = 20;
+const PRONOUN = '(?:he|him|his|she|her|hers|they|them|their|theirs|ze|xe|il|lui|elle|iel|ielle|any|all)';
+// LinkedIn shows pronouns ("He/Him", "(Elle)") right under the name, where the headline usually sits.
+const PRONOUNS_PATTERN = new RegExp(`^\\(?\\s*${PRONOUN}(?:\\s*/\\s*${PRONOUN})*\\s*\\)?$`, 'i');
+
+export const isPronouns = (text: string | null | undefined) => Boolean(text && PRONOUNS_PATTERN.test(text.trim()));
 
 const cleanText = (value: string | null | undefined) => value?.replace(/\s+/g, ' ').trim() || null;
 
@@ -61,7 +66,8 @@ const getTopCard = (heading: Element | null) => {
 };
 
 const getHeadline = (document: Document, heading: Element | null, card: Element | null, fullName: string) => {
-  const legacyHeadline = cleanText(document.querySelector('main .text-body-medium.break-words')?.textContent);
+  const legacyText = cleanText(document.querySelector('main .text-body-medium.break-words')?.textContent);
+  const legacyHeadline = isPronouns(legacyText) ? null : legacyText;
 
   if (legacyHeadline || !heading || !card) {
     return legacyHeadline;
@@ -74,8 +80,10 @@ const getHeadline = (document: Document, heading: Element | null, card: Element 
   for (const paragraph of paragraphs) {
     const text = cleanText(paragraph.textContent);
 
-    // Skips connection degree ("· 1er"), pronouns ("(Elle)") and the name repeated.
-    if (text && text !== fullName && !text.startsWith('·') && !/^\(.*\)$/.test(text) && text.length > 2) {
+    // Skips connection degree ("· 1er"), pronouns ("(Elle)", "He/Him") and the name repeated.
+    const isNoise = text === fullName || text?.startsWith('·') || /^\(.*\)$/.test(text ?? '') || isPronouns(text);
+
+    if (text && !isNoise && text.length > 2) {
       return text;
     }
   }
@@ -170,7 +178,7 @@ const extractPersonPage = (document: Document, profileUrl: string): LinkedinPers
     profileUrl,
     fullName: rawName.split(',')[0].trim(),
     headline,
-    jobTitle: experience.jobTitle ?? headlineRole.jobTitle,
+    jobTitle: [experience.jobTitle, headlineRole.jobTitle].find((title) => title && !isPronouns(title)) ?? null,
     companyName:
       experience.companyName ??
       topCardCompany.companyName ??

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractLinkedinSnapshot } from './extractLinkedinSnapshot';
+import { extractLinkedinSnapshot, isPronouns } from './extractLinkedinSnapshot';
 
 const buildDocument = (body: string, title = 'LinkedIn') => {
   const document = new DOMParser().parseFromString(`<body>${body}</body>`, 'text/html');
@@ -121,6 +121,42 @@ describe('extractLinkedinSnapshot', () => {
         companyUrl: 'https://www.linkedin.com/company/mirakl',
       },
     });
+  });
+
+  it('skips the pronouns shown under the name', () => {
+    const document = buildDocument(
+      `
+      <main>
+        <section>
+          <div>
+            <div><h2>Jason Haydon</h2><p>· 2e</p></div>
+            <p>He/Him</p>
+            <p>Head of Partnerships @Jacquard</p>
+          </div>
+        </section>
+      </main>
+    `,
+      'Jason Haydon | LinkedIn',
+    );
+
+    expect(extractLinkedinSnapshot(document, 'https://www.linkedin.com/in/jason-haydon/')).toMatchObject({
+      page: { headline: 'Head of Partnerships @Jacquard', jobTitle: 'Head of Partnerships', companyName: 'Jacquard' },
+    });
+  });
+
+  it('leaves the job title empty when the only text is pronouns', () => {
+    const document = buildDocument(
+      `<main><h1>Jason Haydon</h1><div class="text-body-medium break-words">She / Her</div></main>`,
+    );
+
+    expect(extractLinkedinSnapshot(document, 'https://www.linkedin.com/in/jason-haydon/')).toMatchObject({
+      page: { headline: null, jobTitle: null },
+    });
+  });
+
+  it('recognizes common pronoun labels only', () => {
+    expect(['He/Him', 'she / her', '(Elle)', 'Il/Lui', 'They/Them/Theirs'].every(isPronouns)).toBe(true);
+    expect(['Head of Sales', 'Helen', 'Directeur'].some(isPronouns)).toBe(false);
   });
 
   it('ignores the extra positions count and prefers "@" over a dash in the headline', () => {
